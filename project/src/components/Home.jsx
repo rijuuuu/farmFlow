@@ -32,6 +32,7 @@ export default function Home() {
 
     setError("");
     setLoading(true);
+
     setChatHistory((prev) => [...prev, { sender: "user", text: message }]);
 
     try {
@@ -49,11 +50,10 @@ export default function Home() {
           { sender: "bot", text: result.reply || "No reply received" },
         ]);
       } else {
-        setError(result.error || "Something went wrong");
+        setError(result.error);
       }
-    } catch (err) {
-      console.error("Error:", err);
-      setError("Server error. Please try again.");
+    } catch {
+      setError("Server error");
     } finally {
       setLoading(false);
       setMessage("");
@@ -66,14 +66,12 @@ export default function Home() {
         <Dashboard />
       </div>
 
-      {/* Floating Chat Icon */}
       {!isChatOpen && (
         <div className="chatbot-icon" onClick={() => setIsChatOpen(true)}>
           💬
         </div>
       )}
 
-      {/* Chatbot Window */}
       {isChatOpen && (
         <div className="chatbot show">
           <div className="chat-header">
@@ -104,7 +102,7 @@ export default function Home() {
                 type="text"
                 value={message}
                 onChange={handleChange}
-                placeholder="Type your message here..."
+                placeholder="Type your message..."
                 className="chat-input"
                 disabled={loading}
               />

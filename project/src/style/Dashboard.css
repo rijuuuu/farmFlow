@@ -14,7 +14,7 @@
 .grid-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;          /* Same height for all cards */
+  grid-auto-rows: auto;   /* 🔥 auto height instead of 1fr */
   gap: 0.8rem;
   width: 100%;
   height: calc(100% - 60px);
@@ -22,19 +22,21 @@
   box-sizing: border-box;
 }
 
-/* ====== CARD STYLES (same height) ====== */
+/* ====== CARD STYLES ====== */
 .card {
   background-color: #dde5b6;
   border-radius: 12px;
   color: #000;
   display: flex;
   flex-direction: column;
-  justify-content: center;     /* perfectly centers content */
+  justify-content: flex-start;   /* 🔥 KEEP CONTENT AT TOP */
   align-items: center;
   text-align: center;
   transition: all 0.3s ease;
-  height: 100%;                /* force same height */
-  padding: 0.6rem;             /* reduced gaps */
+  padding: 0.6rem;
+
+  height: auto;     /* 🔥 FIX — removes full-height card */
+  min-height: 120px;
 }
 
 /* ==== GRID POSITIONS ==== */
@@ -61,7 +63,6 @@
 .forecast {
   grid-column: 1 / 4;
   grid-row: 3 / 4;
-  height: 100%;
 }
 
 /* ===== LOCATION ROW ===== */
@@ -71,35 +72,14 @@
   gap: 0.4rem;
 }
 
-/* ===== WEATHER ===== */
-.stats {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 0.3rem;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 0.9rem;
-}
-
-/* ===== FARM DETAILS CLEANED ===== */
-.farm-wrapper {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
+/* ===== FARM INPUT ROW ===== */
 .farm-input-row {
   width: 100%;
   display: flex;
   justify-content: center;
   gap: 0.4rem;
-  margin-bottom: 0.6rem;
+
+  margin-bottom: 0;   /* No gap under input */
 }
 
 .farm-input {
@@ -120,17 +100,23 @@
   font-weight: 500;
 }
 
+.farm-btn:hover {
+  background: #607741;
+}
+
+/* ===== FARM LIST ===== */
 .farm-list {
   width: 100%;
   list-style: none;
   padding: 0;
-  margin-top: 0.3rem;
+  margin-top: 0.1rem;  /* almost zero gap */
 }
 
 .farm-list li {
   background: #eef3d8;
-  padding: 0.4rem 0.5rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  margin-bottom: 0.3rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  font-weight: 500;
 }
