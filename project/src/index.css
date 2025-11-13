@@ -1,0 +1,23 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0ead2ff;
+    color: #6c584cff;
+}
+
+h1{
+    font-weight: 900;
+}
+/* 
+--parchment: #f0ead2ff; light
+--tea-green: #dde5b6ff;
+--olivine: #adc178ff;
+--chamoisee: #a98467ff;
+--umber: #6c584cff; deep
+
+*/

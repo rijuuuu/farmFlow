@@ -1,0 +1,136 @@
+.dashboard {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-top: 70px;
+  box-sizing: border-box;
+  height: 100vh;
+  width: 100%;
+  font-family: "Poppins", sans-serif;
+  overflow: hidden;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;          /* Same height for all cards */
+  gap: 0.8rem;
+  width: 100%;
+  height: calc(100% - 60px);
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
+}
+
+/* ====== CARD STYLES (same height) ====== */
+.card {
+  background-color: #dde5b6;
+  border-radius: 12px;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;     /* perfectly centers content */
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+  height: 100%;                /* force same height */
+  padding: 0.6rem;             /* reduced gaps */
+}
+
+/* ==== GRID POSITIONS ==== */
+.name-location {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+}
+
+.weather {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.name-location-2 {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+}
+
+.schemes {
+  grid-column: 3 / 4;
+  grid-row: 1 / 3;
+}
+
+.forecast {
+  grid-column: 1 / 4;
+  grid-row: 3 / 4;
+  height: 100%;
+}
+
+/* ===== LOCATION ROW ===== */
+.loc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ===== WEATHER ===== */
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.3rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+/* ===== FARM DETAILS CLEANED ===== */
+.farm-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.farm-input-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.farm-input {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #a8b88a;
+  font-size: 0.9rem;
+}
+
+.farm-btn {
+  padding: 0.45rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background: #758c4f;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.farm-list {
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin-top: 0.3rem;
+}
+
+.farm-list li {
+  background: #eef3d8;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
