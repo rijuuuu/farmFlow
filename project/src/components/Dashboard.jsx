@@ -111,8 +111,8 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="grid-container">
 
-        {/* USER CARD */}
-        <div className="card name-location">
+        {/* USER dashcard */}
+        <div className="dashcard name-location">
           <h1>Hello, {userID}</h1>
           <div className="loc-row">
             <FaLocationDot />
@@ -122,13 +122,13 @@ export default function Dashboard() {
         </div>
 
         {/* WEATHER */}
-        <div className="card weather">
+        <div className="dashcard weather">
           <h3>Weather</h3>
           <p>Coming soon...</p>
         </div>
 
         {/* FARM DETAILS */}
-        <div className="card name-location-2">
+        <div className="dashcard name-location-2">
           <div className="farm-wrapper">
             <div className="farm-input-row">
               <input
@@ -165,13 +165,13 @@ export default function Dashboard() {
         </div>
 
         {/* GOV SCHEMES */}
-        <div className="card schemes">
+        <div className="dashcard schemes">
           <h3>Gov Schemes</h3>
           <p>Latest agriculture schemes will appear here.</p>
         </div>
 
         {/* FORECAST */}
-        <div className="card forecast">
+        <div className="dashcard forecast">
           <h3>Forecast</h3>
           <p>Coming soon...</p>
         </div>

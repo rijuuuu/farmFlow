@@ -6,12 +6,12 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  padding-top: 70px;
+  /* padding-top: 70px; */
   box-sizing: border-box;
-  height: 100%;
+  height: calc(100vh - 70px);
   width: 100%;
   font-family: "Poppins", sans-serif;
-  overflow: auto;
+  overflow: hidden;
 }
 
 /* ============================
@@ -28,9 +28,9 @@
 }
 
 /* ============================
-   CARD BASE STYLE
+   dashcard BASE STYLE
 ============================ */
-.card {
+.dashcard {
   background: linear-gradient(145deg, #f9f7e8 0%, #f5f2df 50%, #efeccf 100%);
   border-radius: 12px;
   color: #000;

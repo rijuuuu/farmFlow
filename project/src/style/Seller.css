@@ -1,6 +1,23 @@
 /* ============================================================
-   🌱 GLOBAL LAYOUT
+   🌱 GLOBAL
 ============================================================ */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  /* background: linear-gradient(120deg, #f9fafb, #e9f5e9); */
+  color: #222;
+  padding-top: 70px;   /* ⬅⬅ topbar space added */
+}
+
+.panel {
+  /* FIX: Change margin from 20px auto to 0 auto to remove top/bottom margin */
+  margin: 0 auto; 
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: none; /* removed shadows to match transparent layout */
+  max-width: 1000px;
+}
+
 .seller-wrapper {
   max-width: 1100px;
   margin: auto;

@@ -8,8 +8,7 @@ import {
   acceptRequest,
   rejectRequest
 } from "../api";
-// import BuyerSellerChat from "./BuyerSellerChat";
-// import "./App.css";
+import BuyerSellerChat from "./BuyerSellerChat"; // FIX: Import the BuyerSellerChat component
 import "../style/Seller.css";
 
 export default function Seller() {
@@ -18,22 +17,26 @@ export default function Seller() {
   const [reqs, setReqs] = useState([]);
   const [done, setDone] = useState([]);
 
+  // FIX: Ensure load function uses the input seller ID for fetching
   const load = async () => {
     if (!seller) return;
 
-    setNotifs(await listNotifications({ seller }));
+    // NOTE: Relying on server to handle case-insensitivity/cleaning for API calls
+    setNotifs(await listNotifications({ seller })); 
 
     const all = await listRequests({ seller_id: seller });
     setReqs(all.filter(r => r.status === "pending"));
     setDone(all.filter(r => r.status !== "pending"));
   };
 
+  // FIX: Ensure accept is correctly defined here
   const accept = async (id, farmer) => {
     await acceptRequest(id);
     toast.success(`Accepted ${farmer}`);
     load();
   };
 
+  // FIX: Ensure reject is correctly defined here
   const reject = async (id, farmer) => {
     await rejectRequest(id);
     toast(`Rejected ${farmer}`);
@@ -90,14 +93,14 @@ export default function Seller() {
               <div className="card-commodities">{r.crop} — ₹{r.price}</div>
 
               <button
-                onClick={() => accept(r.id, r.farmer_name)}
+                onClick={() => accept(r.id, r.farmer_name)} // References the local accept function
                 className="connect-btn"
               >
                 ✅ Accept
               </button>
 
               <button
-                onClick={() => reject(r.id, r.farmer_name)}
+                onClick={() => reject(r.id, r.farmer_name)} // References the local reject function
                 className="reject-btn"
               >
                 ❌ Reject
@@ -141,7 +144,11 @@ export default function Seller() {
       <section className="glass-box">
         <h3>💬 Chat</h3>
         {done.filter(r => r.status === "accepted").map(r => (
-          <ChatBox key={r.id} user={seller} partner={r.farmer_name} />
+          <BuyerSellerChat 
+            key={r.id} 
+            user={r.seller_id} // FIX: Use canonical seller ID for consistent chat room generation
+            partner={r.farmer_name} 
+          />
         ))}
       </section>
     </div>

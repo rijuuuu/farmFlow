@@ -45,11 +45,22 @@ export default function Login() {
       const result = await response.json();
 
       if (response.ok) {
-        // Store user ID for later use
-        localStorage.setItem("uniqueID", uniqueID);
+        // FIX: Store user role and navigate to the specific dashboard
+        
+        const userRole = result.role; 
 
-        // Navigate to homepage or dashboard
-        navigate("/Home");
+        if (userRole) {
+            localStorage.setItem("uniqueID", uniqueID);
+            localStorage.setItem("userRole", userRole);
+
+            // Navigate to the correct dashboard based on role
+            const targetPath = userRole.toLowerCase() === 'seller' ? '/seller' : '/buyer';
+            navigate(targetPath);
+        } else {
+            console.error("❌ Login error: User role is missing from server response.");
+            localStorage.setItem("uniqueID", uniqueID);
+            navigate("/Home");
+        }
       } else {
         setError(result.error || "Invalid login credentials");
       }

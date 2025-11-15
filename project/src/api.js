@@ -15,3 +15,5 @@ export const acceptRequest = (id) => axios.post(`${API}/api/accept/${id}`).then(
 export const rejectRequest = (id) => axios.post(`${API}/api/reject/${id}`).then(r => r.data);
 export const sendMessage = (payload) => axios.post(`${API}/api/chat/send`, payload).then(r => r.data);
 export const getChatHistory = (room) => axios.get(`${API}/api/chat/history`, { params: { room } }).then(r => r.data);
+
+// The extra '}' has been removed from here.

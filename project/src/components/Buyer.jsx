@@ -2,20 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import {
-  recommend,
-  createRequest,
-  listRequests
-} from "../api";
+import { recommend, createRequest, listRequests } from "../api";
 import "../style/Buyer.css";
+import BuyerSellerChat from "./BuyerSellerChat";
+import ChatBox from "./Chatbot"; // FIX 1: Import the ChatBox component
 
 export default function Buyer() {
+  const userID = localStorage.getItem("uniqueID");
   const [farmerId, setFarmerId] = useState("F001");
-  const [farmerName, setFarmerName] = useState("Ravi Kumar");
+  const [farmerName, setFarmerName] = useState(userID);
 
   // search fields
-  const [crop, setCrop] = useState("Vegetables");
-  const [region, setRegion] = useState("Alipurduar");
+  const [crop, setCrop] = useState("");
+  const [region, setRegion] = useState("");
   const [price, setPrice] = useState(2000);
 
   // data lists
@@ -46,7 +45,7 @@ export default function Buyer() {
         crop,
         region,
         price,
-        seller_id: seller.seller_id,   // IMPORTANT FIX
+        seller_id: seller.seller_id, // IMPORTANT FIX
       });
 
       toast.success(`Request sent to ${seller.FPC_Name}`);
@@ -75,9 +74,8 @@ export default function Buyer() {
   return (
     <div className="panel">
       <Toaster />
-
-      <h2>👨‍🌾 Farmer Portal</h2>
-
+      <ChatBox /> {/* FIX 2: Render the ChatBox component */}
+      <h2>Farmer Portal</h2>
       {/* Inputs */}
       <div className="form-grid">
         <input
@@ -108,14 +106,13 @@ export default function Buyer() {
           type="number"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          placeholder="Price (₹)"
+          placeholder="Price (竄ｹ)"
         />
 
         <button onClick={search} className="primary-btn">
-          🔍 Search Sellers
+          Search Sellers
         </button>
       </div>
-
       {/* Recommended Sellers */}
       <h3>Recommended Sellers</h3>
       <div className="card-list">
@@ -123,24 +120,18 @@ export default function Buyer() {
 
         {recs.map((r, i) => (
           <div key={i} className="card">
-            <div className="card-logo">
-              {(r.FPC_Name || "S")[0]}
-            </div>
+            <div className="card-logo">{(r.FPC_Name || "S")[0]}</div>
 
             <div className="card-title">{r.FPC_Name}</div>
             <div className="card-district">{r.District}</div>
             <div className="card-commodities">{r.Commodities}</div>
 
-            <button
-              onClick={() => connect(r)}
-              className="connect-btn"
-            >
-              🤝 Connect
+            <button onClick={() => connect(r)} className="connect-btn">
+              ､Connect
             </button>
           </div>
         ))}
       </div>
-
       {/* Requests */}
       <h3>Your Requests</h3>
       <div className="table-container">
@@ -168,9 +159,17 @@ export default function Buyer() {
           </table>
         )}
       </div>
-
-      {/* Chat (optional) */}
-      {/* You removed ChatBox, so disabling */}
+      {/* Chat section */}
+      <h3>💬 Chat</h3>
+      {reqs
+        .filter((r) => r.status === "accepted")
+        .map((r) => (
+          <BuyerSellerChat
+            key={r.id}
+            user={farmerName} // The farmer is the user for the chat
+            partner={r.seller_id} // The seller is the partner
+          />
+        ))}
     </div>
   );
 }
