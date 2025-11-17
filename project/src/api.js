@@ -1,7 +1,6 @@
 import axios from "axios";
 
-// FIX: Use localhost for the API URL if running the frontend and backend on the same machine.
-const API = "http://http://192.168.1.5/:5000"; 
+const API = "http://192.168.1.5:5000";
 
 export default API;
 

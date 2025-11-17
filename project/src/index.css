@@ -13,6 +13,11 @@ body{
 h1{
     font-weight: 900;
 }
+
+body.chat-mode-active {
+    overflow: hidden; 
+    height: 100vh; /* Ensures the body takes up exactly the viewport height */
+}
 /* 
 --parchment: #f0ead2ff; light
 --tea-green: #dde5b6ff;

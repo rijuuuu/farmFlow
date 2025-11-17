@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import ChatIcon from "./ChatIcon";
-import ChatSidebar from "./ChatSidebar";
-import API, { recommend, createRequest, listRequests } from "../api"; 
+import { recommend, createRequest, listRequests } from "../api"; 
+import API from "../api"; 
+import BuyerSellerChat from "./BuyerSellerChat"; 
 import "../style/Farmers.css";
 
 export default function Farmer() {
@@ -11,8 +11,7 @@ export default function Farmer() {
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptedDeals, setAcceptedDeals] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeChat, setActiveChat] = useState(null); 
+  const [currentChatDeal, setCurrentChatDeal] = useState(null); 
 
   const farmer_id = localStorage.getItem("uniqueID");
   const farmer_name = localStorage.getItem("username");
@@ -74,38 +73,60 @@ export default function Farmer() {
   };
   
   const handleOpenChat = (deal) => {
-    // FIX: Use String() and trim() for stricter validation against null/undefined/empty strings
     const fpc_id = String(deal.fpc_id || "").trim();
     
-    if (!fpc_id) {
-        toast.error("Seller ID is missing for this deal. Cannot open chat.");
+    if (!fpc_id || !farmer_id) { 
+        toast.error("Required IDs are missing for this deal. Cannot open chat.");
         return; 
     }
 
-    const partnerId = fpc_id;
-    
-    const farmerIdStr = String(farmer_id).toLowerCase();
-    const fpcIdStr = String(fpc_id).toLowerCase();
-
-    const room =
-        farmerIdStr < fpcIdStr
-          ? `${farmerIdStr}_${fpcIdStr}`
-          : `${fpcIdStr}_${farmerIdStr}`;
-    
-    setActiveChat({ c: deal, partnerId, room });
-    setSidebarOpen(true);
+    setCurrentChatDeal(deal);
   };
 
-  const handleOpenSidebarIcon = () => {
-    setActiveChat(null); 
-    setSidebarOpen(true);
-  }
-  
-  const handleCloseSidebar = () => {
-    setSidebarOpen(false);
-    setActiveChat(null); 
+  const handleCloseChat = () => {
+    setCurrentChatDeal(null);
   }
 
+  // FIX: UseEffect to toggle the global body class for scrolling
+  useEffect(() => {
+      if (currentChatDeal) {
+          document.body.classList.add('chat-mode-active');
+      } else {
+          document.body.classList.remove('chat-mode-active');
+      }
+      return () => {
+          document.body.classList.remove('chat-mode-active');
+      };
+  }, [currentChatDeal]);
+
+  // Conditional Rendering: If a chat deal is active, show the chat window
+  if (currentChatDeal) {
+      const deal = currentChatDeal;
+      const partnerId = String(deal.fpc_id).trim();
+      const partnerName = deal.fpc_name;
+      
+      const farmerIdStr = String(farmer_id).toLowerCase();
+      const fpcIdStr = String(partnerId).toLowerCase();
+
+      const room = farmerIdStr < fpcIdStr
+          ? `${farmerIdStr}_${fpcIdStr}`
+          : `${fpcIdStr}_${farmerIdStr}`;
+
+      return (
+        <div className="farmer-panel"> 
+          <Toaster />
+          <BuyerSellerChat 
+            user={farmer_id} 
+            partnerId={partnerId} 
+            partnerName={partnerName} 
+            room={room} 
+            onCloseChat={handleCloseChat}
+          />
+        </div>
+      );
+  }
+
+  // Default rendering (Marketplace)
   return (
     <div className="farmer-panel">
       <Toaster />
@@ -151,14 +172,6 @@ export default function Farmer() {
           </div>
         </div>
       ))}
-
-      <ChatIcon onClick={handleOpenSidebarIcon} />
-      <ChatSidebar 
-        open={sidebarOpen} 
-        onClose={handleCloseSidebar} 
-        userID={farmer_id}
-        initialActiveChat={activeChat} 
-      />
     </div>
   );
 }

@@ -1,74 +1,124 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // FIXED: Changed '=> "react"' to 'from "react"'
 import { sendMessage, getChatHistory } from "../api";
+import { toast } from "react-hot-toast";
+import "../style/BuyerSellerChat.css";
 
-export default function BuyerSellerChat({ user, partner, room }) {
-  const [text, setText] = useState("");
-  const [messages, setMessages] = useState([]);
+// Accepts user, partnerId (the ID), partnerName (the display name), room, AND onCloseChat
+export default function BuyerSellerChat({ user, partnerId, partnerName, room, onCloseChat }) { 
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState("");
+  const chatEndRef = useRef(null);
 
-  const load = async () => {
-    // Only load chat history if the room ID is valid
-    if (room && room.includes("_") && !room.includes("undefined")) {
-        const res = await getChatHistory(room);
-        if (Array.isArray(res)) setMessages(res);
-    }
-  };
+  // Strict check on room validity
+  const isValidChat = room && partnerId && user && !room.includes("undefined"); 
 
-  useEffect(() => {
-    load();
-    // Only set up interval if room is valid
-    if (room && room.includes("_") && !room.includes("undefined")) {
-        const iv = setInterval(load, 2000);
-        return () => clearInterval(iv);
-    }
-    return () => {}; // Cleanup function if no interval was set
-  }, [room]);
+  const loadHistory = async () => {
+    if (!isValidChat) return;
+    try {
+      const history = await getChatHistory(room);
+      setMessages(history);
+    } catch (error) {
+      console.error("Failed to load chat history:", error);
+    }
+  };
 
-  const send = async () => {
-    const messageText = text.trim();
-    
-    // Check if the message is empty
-    if (!messageText) return;
+  const handleSend = async () => {
+    const textToSend = inputText.trim();
+    if (!textToSend) return;
 
-    // FIX: Check if essential chat IDs are missing before calling the API
-    if (!user || !partner || !room || room.includes("undefined")) {
-        console.error("Chat send failed: Missing user, partner, or room ID.", { user, partner, room });
-        // Since this component can't access toast, we rely on the console error.
-        return; 
-    }
+    if (!isValidChat) {
+        toast.error("Cannot send message: Chat room is invalid or IDs are missing.");
+        return;
+    }
 
-    await sendMessage({
-      sender: user,
-      receiver: partner,
-      text: messageText,
-      room,
-    });
-    setText("");
-    load();
-  };
+    try {
+      const payload = {
+        sender: user,
+        receiver: partnerId, 
+        text: textToSend,
+        room: room,
+      };
 
-  return (
-    <div className="buyer-seller-chatbox">
-      <div className="buyer-seller-chat-header">Chat</div>
+      await sendMessage(payload);
+      setInputText(""); 
+      loadHistory();
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message.");
+    }
+  };
 
-      <div className="buyer-seller-chat-body">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`msg ${m.sender === user ? "sent" : "recv"}`}
-          >
-            <div className="bubble">{m.text}</div>
-          </div>
-        ))}
-      </div>
+  const scrollToBottom = () => {
+    // FIX: This correctly targets the ref placed at the end of the scrollable messages div
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-      <div className="buyer-seller-chat-input">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type message…"
-        />
-        <button onClick={send}>Send</button>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    loadHistory(); 
+    if (!isValidChat) return;
+
+    const interval = setInterval(loadHistory, 3000);
+    return () => clearInterval(interval);
+  }, [room, user, partnerId]); 
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="buyer-seller-chat-container">
+      <div className="buyer-seller-chat-header">
+          {/* Back icon element */}
+          <button className="chat-back-icon" onClick={onCloseChat}>
+            &larr;
+          </button>
+          Chatting with {partnerName || partnerId}      
+      </div>
+          
+      <div className="buyer-seller-chat-messages">
+        {messages.length === 0 ? (
+          <div className="buyer-seller-empty-chat">
+            Say hello to start the conversation!
+          </div>
+        ) : (
+          messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`buyer-seller-chat-message ${
+                msg.sender === user
+                  ? "buyer-seller-user-message"
+                  : "buyer-seller-partner-message"
+              }`}
+            >
+              <div className="buyer-seller-message-text">{msg.text}</div>      
+              <div className="buyer-seller-message-time">
+                {new Date(msg.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+            </div>
+          ))
+        )}
+        <div ref={chatEndRef} />
+      </div>
+      
+      <div className="buyer-seller-chat-input-area">
+        <input
+          type="text"
+          placeholder="Type a message..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <button onClick={handleSend}>Send</button>
+      </div>
+    </div>
+  );
 }
