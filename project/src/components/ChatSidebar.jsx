@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import BuyerSellerChat from "./BuyerSellerChat";
 import API from "../api";
 import "../style/ChatSidebar.css";
+import { toast } from "react-hot-toast";
 
-export default function ChatSidebar({ open, onClose, userID }) {
+export default function ChatSidebar({ open, onClose, userID, initialActiveChat }) { 
   const [role] = useState(localStorage.getItem("role") || "farmer");
   const [uniqueID] = useState(userID || localStorage.getItem("uniqueID"));
   const [chats, setChats] = useState([]);
@@ -15,14 +16,25 @@ export default function ChatSidebar({ open, onClose, userID }) {
         ? `${API}/api/requests?fpc_id=${uniqueID}`
         : `${API}/api/requests?farmer_id=${uniqueID}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
-    const accepted = Array.isArray(data)
-      ? data.filter((r) => r.status === "accepted")
-      : [];
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const accepted = Array.isArray(data)
+          ? data.filter((r) => r.status === "accepted")
+          : [];
 
-    setChats(accepted);
-    if (!accepted.length) setActive(null);
+        setChats(accepted);
+        if (!accepted.length) setActive(null);
+        
+        if (active && !accepted.some(c => c.id === active.c.id)) {
+            setActive(null);
+        }
+
+    } catch (e) {
+        console.error("Failed to load chats:", e);
+        setChats([]);
+        setActive(null);
+    }
   };
 
   useEffect(() => {
@@ -33,11 +45,43 @@ export default function ChatSidebar({ open, onClose, userID }) {
     return () => clearInterval(iv);
   }, [open]);
 
+  useEffect(() => {
+    if (open && initialActiveChat && !active) {
+        if (chats.some(c => c.id === initialActiveChat.c.id)) {
+            setActive(initialActiveChat);
+        }
+    }
+  }, [open, initialActiveChat, chats, active]);
+
+
   const del = async (rid) => {
     await fetch(`${API}/api/request/delete/${rid}`, { method: "POST" });
     setActive(null);
     loadChats();
   };
+  
+  const handleSetActive = (c) => {
+    // FIX: Use String() and trim() for stricter validation
+    const farmerId = String(c.farmer_id || "").trim();
+    const fpcId = String(c.fpc_id || "").trim();
+
+    if (!farmerId || !fpcId) {
+        toast.error("Required chat IDs are missing. Cannot open chat.");
+        return;
+    }
+
+    const partnerId = role === "seller" ? farmerId : fpcId;
+
+    const farmerIdStr = farmerId.toLowerCase();
+    const fpcIdStr = fpcId.toLowerCase();
+
+    const room =
+        farmerIdStr < fpcIdStr
+          ? `${farmerIdStr}_${fpcIdStr}`
+          : `${fpcIdStr}_${farmerIdStr}`;
+
+    setActive({ c, partnerId, room });
+  }
 
   return (
     <div className={`chat-sidebar ${open ? "open" : ""}`} role="dialog" inert={!open}>
@@ -49,19 +93,15 @@ export default function ChatSidebar({ open, onClose, userID }) {
       <div className="chat-list">
         {chats.map((c) => {
           const partnerName = role === "seller" ? c.farmer_name : c.fpc_name;
-          const partnerId = role === "seller" ? c.farmer_id : c.fpc_id;
-
-          const room =
-            String(c.farmer_id).toLowerCase() <
-            String(c.fpc_id).toLowerCase()
-              ? `${c.farmer_id}_${c.fpc_id}`
-              : `${c.fpc_id}_${c.farmer_id}`;
+          
+          // FIX: Use strict validation to filter out malformed chat items
+          if (!String(c.farmer_id || "").trim() || !String(c.fpc_id || "").trim()) return null;
 
           return (
             <div
               key={c.id}
-              className="chat-list-item"
-              onClick={() => setActive({ c, partnerId, room })}
+              className={`chat-list-item ${active && active.c.id === c.id ? 'active' : ''}`}
+              onClick={() => handleSetActive(c)}
             >
               <div className="chat-list-title">{partnerName}</div>
               <div className="chat-list-sub">{c.crop} • {c.region}</div>

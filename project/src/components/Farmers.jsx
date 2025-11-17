@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import ChatIcon from "./ChatIcon";
 import ChatSidebar from "./ChatSidebar";
-import { recommend, createRequest, listRequests } from "../api";
+import API, { recommend, createRequest, listRequests } from "../api"; 
 import "../style/Farmers.css";
 
 export default function Farmer() {
@@ -12,6 +12,7 @@ export default function Farmer() {
   const [loading, setLoading] = useState(false);
   const [acceptedDeals, setAcceptedDeals] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeChat, setActiveChat] = useState(null); 
 
   const farmer_id = localStorage.getItem("uniqueID");
   const farmer_name = localStorage.getItem("username");
@@ -67,10 +68,43 @@ export default function Farmer() {
   const deleteReq = async (rid) => {
     if (!window.confirm("Delete permanently?")) return;
     try {
-      await fetch(`${"http://192.168.1.5:5000"}/api/request/delete/${rid}`, { method: "POST" });
+      await fetch(`${API}/api/request/delete/${rid}`, { method: "POST" });
       await loadAccepted();
     } catch {}
   };
+  
+  const handleOpenChat = (deal) => {
+    // FIX: Use String() and trim() for stricter validation against null/undefined/empty strings
+    const fpc_id = String(deal.fpc_id || "").trim();
+    
+    if (!fpc_id) {
+        toast.error("Seller ID is missing for this deal. Cannot open chat.");
+        return; 
+    }
+
+    const partnerId = fpc_id;
+    
+    const farmerIdStr = String(farmer_id).toLowerCase();
+    const fpcIdStr = String(fpc_id).toLowerCase();
+
+    const room =
+        farmerIdStr < fpcIdStr
+          ? `${farmerIdStr}_${fpcIdStr}`
+          : `${fpcIdStr}_${farmerIdStr}`;
+    
+    setActiveChat({ c: deal, partnerId, room });
+    setSidebarOpen(true);
+  };
+
+  const handleOpenSidebarIcon = () => {
+    setActiveChat(null); 
+    setSidebarOpen(true);
+  }
+  
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+    setActiveChat(null); 
+  }
 
   return (
     <div className="farmer-panel">
@@ -107,7 +141,7 @@ export default function Farmer() {
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setSidebarOpen(true)} style={{ background: "#46b96b", padding: "8px 10px", color: "white", borderRadius: 8, border: "none" }}>
+            <button onClick={() => handleOpenChat(d)} style={{ background: "#46b96b", padding: "8px 10px", color: "white", borderRadius: 8, border: "none" }}>
               Open Chat
             </button>
 
@@ -118,8 +152,13 @@ export default function Farmer() {
         </div>
       ))}
 
-      <ChatIcon onClick={() => setSidebarOpen(true)} />
-      <ChatSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userID={farmer_id} />
+      <ChatIcon onClick={handleOpenSidebarIcon} />
+      <ChatSidebar 
+        open={sidebarOpen} 
+        onClose={handleCloseSidebar} 
+        userID={farmer_id}
+        initialActiveChat={activeChat} 
+      />
     </div>
   );
 }

@@ -6,22 +6,40 @@ export default function BuyerSellerChat({ user, partner, room }) {
   const [messages, setMessages] = useState([]);
 
   const load = async () => {
-    const res = await getChatHistory(room);
-    if (Array.isArray(res)) setMessages(res);
+    // Only load chat history if the room ID is valid
+    if (room && room.includes("_") && !room.includes("undefined")) {
+        const res = await getChatHistory(room);
+        if (Array.isArray(res)) setMessages(res);
+    }
   };
 
   useEffect(() => {
     load();
-    const iv = setInterval(load, 2000);
-    return () => clearInterval(iv);
+    // Only set up interval if room is valid
+    if (room && room.includes("_") && !room.includes("undefined")) {
+        const iv = setInterval(load, 2000);
+        return () => clearInterval(iv);
+    }
+    return () => {}; // Cleanup function if no interval was set
   }, [room]);
 
   const send = async () => {
-    if (!text.trim()) return;
+    const messageText = text.trim();
+    
+    // Check if the message is empty
+    if (!messageText) return;
+
+    // FIX: Check if essential chat IDs are missing before calling the API
+    if (!user || !partner || !room || room.includes("undefined")) {
+        console.error("Chat send failed: Missing user, partner, or room ID.", { user, partner, room });
+        // Since this component can't access toast, we rely on the console error.
+        return; 
+    }
+
     await sendMessage({
       sender: user,
       receiver: partner,
-      text,
+      text: messageText,
       room,
     });
     setText("");

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import API from "../api";
 import ChatIcon from "./ChatIcon";
 import ChatSidebar from "./ChatSidebar";
@@ -11,6 +11,7 @@ export default function Seller() {
   const [reqs, setReqs] = useState([]);
   const [done, setDone] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeChat, setActiveChat] = useState(null); 
 
   async function loadFPC() {
     try {
@@ -55,6 +56,39 @@ export default function Seller() {
     loadData();
   }
 
+  const handleOpenChat = (deal) => {
+    // FIX: Use String() and trim() for stricter validation against null/undefined/empty strings
+    const farmer_id = String(deal.farmer_id || "").trim();
+    
+    if (!farmer_id) {
+        toast.error("Farmer ID is missing for this deal. Cannot open chat.");
+        return;
+    }
+
+    const partnerId = farmer_id;
+
+    const farmerIdStr = String(farmer_id).toLowerCase();
+    const uniqueIDStr = String(uniqueID).toLowerCase();
+
+    const room =
+        farmerIdStr < uniqueIDStr
+          ? `${farmerIdStr}_${uniqueIDStr}`
+          : `${uniqueIDStr}_${farmerIdStr}`;
+    
+    setActiveChat({ c: deal, partnerId, room });
+    setSidebarOpen(true);
+  };
+  
+  const handleOpenSidebarIcon = () => {
+    setActiveChat(null); 
+    setSidebarOpen(true);
+  }
+  
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+    setActiveChat(null); 
+  }
+
   return (
     <div className="seller-wrapper">
       <Toaster />
@@ -89,7 +123,7 @@ export default function Seller() {
             </div>
 
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setSidebarOpen(true)} style={{ background: "#46b96b", padding: "8px 10px", color: "white", borderRadius: 8, border: "none" }}>
+              <button onClick={() => handleOpenChat(d)} style={{ background: "#46b96b", padding: "8px 10px", color: "white", borderRadius: 8, border: "none" }}>
                 Open Chat
               </button>
             </div>
@@ -97,8 +131,13 @@ export default function Seller() {
         ))}
       </section>
 
-      <ChatIcon onClick={() => setSidebarOpen(true)} />
-      <ChatSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userID={uniqueID} />
+      <ChatIcon onClick={handleOpenSidebarIcon} />
+      <ChatSidebar 
+        open={sidebarOpen} 
+        onClose={handleCloseSidebar} 
+        userID={uniqueID} 
+        initialActiveChat={activeChat} 
+      />
     </div>
   );
 }
