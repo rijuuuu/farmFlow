@@ -12,6 +12,14 @@ from web3 import Web3
 # New import for BM25
 from rank_bm25 import BM25Okapi
 import warnings
+
+import pandas as pd
+import numpy as np
+import requests
+
+from src.scheme_engine.engine import recommend_scheme_single, df as SCHEME_DF
+
+
 warnings.filterwarnings("ignore")
 
 try:
@@ -34,6 +42,7 @@ INFURA_URL = os.getenv("INFURA_URL")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
 PORT = int(os.getenv("PORT", "5000"))
+OPENWEATHER_KEY = os.getenv("OPENWEATHER_KEY")
 
 ABI = [
     {
@@ -185,6 +194,69 @@ def normalize_value(val, min_val, max_val):
         return (val - min_val) / (max_val - min_val)
     except Exception:
         return 0.5
+    
+    
+def is_central_ministry(text: str) -> bool:
+    text = text.lower()
+    return text.startswith("ministry of") or "government of india" in text
+
+
+def get_next_best_scheme(crop: str, state: str, exclude_list):
+    crop = crop.lower().strip()
+    state = state.lower().strip()
+
+    try:
+        engine_res = recommend_scheme_single(crop, state)
+        best_name = engine_res["scheme_name"]
+    except:
+        engine_res = None
+        best_name = None
+
+    if engine_res and best_name not in exclude_list:
+        return engine_res
+
+    df = SCHEME_DF.copy()
+    df = df[~df["scheme_name"].isin(exclude_list)]
+
+    if df.empty:
+        return None
+
+    scores = []
+
+    for _, row in df.iterrows():
+        score = 0
+        desc = row["description"].lower()
+        tags = row["tags"].lower()
+        sm = row["state_ministry"].lower()
+        name = row["scheme_name"].lower()
+
+        if state in sm:
+            score += 8000
+        elif is_central_ministry(sm):
+            score += 3000
+        else:
+            score -= 4000
+
+        if crop in name:
+            score += 500
+        if crop in desc:
+            score += 300
+        if crop in tags:
+            score += 200
+
+        scores.append((score, row))
+
+    scores.sort(key=lambda x: x[0], reverse=True)
+    best_score, best_row = scores[0]
+
+    return {
+        "scheme_name": best_row["scheme_name"],
+        "state_ministry": best_row["state_ministry"],
+        "description": best_row["description"],
+        "tags": best_row["tags"],
+        "scheme_link": best_row.get("scheme_link", ""),
+        "score": float(best_score),
+    }
 
 # -------------------------
 # End recommendation helpers
@@ -653,6 +725,140 @@ def get_user():
         return jsonify({"error": "User not found"}), 404
 
     return jsonify(user), 200
+
+
+# ============================================================
+# WEATHER ENDPOINTS (FROM FILE O)
+# ============================================================
+@app.get("/api/weather/forecast")
+def weather_forecast():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+
+    if not lat or not lon:
+        return jsonify({"error": "Missing coordinates"}), 400
+
+    if not OPENWEATHER_KEY:
+        return jsonify({"error": "Missing OpenWeather key"}), 500
+
+    url = (
+        f"https://api.openweathermap.org/data/2.5/forecast?"
+        f"lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+    )
+
+    try:
+        r = requests.get(url)
+        data = r.json()
+
+        if "list" not in data:
+            return jsonify({"error": "OpenWeather error", "details": data}), 500
+
+        return jsonify({"forecast": data["list"]}), 200
+
+    except Exception as e:
+        print("WEATHER FORECAST ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.get("/api/weather/current")
+def weather_current():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+
+    if not lat or not lon:
+        return jsonify({"error": "Missing coordinates"}), 400
+
+    if not OPENWEATHER_KEY:
+        return jsonify({"error": "Missing OpenWeather key"}), 500
+
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather?"
+        f"lat={lat}&lon={lon}&appid={OPENWEATHER_KEY}&units=metric"
+    )
+
+    try:
+        r = requests.get(url)
+        data = r.json()
+
+        result = {
+            "temp": data["main"]["temp"],
+            "humidity": data["main"]["humidity"],
+            "rain": data.get("rain", {}).get("1h", 0),
+            "condition": data["weather"][0]["description"],
+            "icon": data["weather"][0]["icon"]
+        }
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print("CURRENT WEATHER ERROR:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================
+# GOV SCHEME ENDPOINTS (FROM FILE O)
+# ============================================================
+@app.post("/api/scheme/bycrop")
+def scheme_bycrop():
+    data = request.get_json() or {}
+    crop = data.get("crop", "").strip()
+    state = data.get("state", "").strip()
+    shown = data.get("shown_schemes", [])
+
+    scheme_dict = get_next_best_scheme(crop, state, shown)
+
+    if scheme_dict is None:
+        return jsonify({"error": "No scheme available"}), 404
+
+    return jsonify({"recommended_scheme": scheme_dict}), 200
+
+
+@app.post("/api/scheme/auto")
+def scheme_auto():
+    data = request.get_json() or {}
+    userID = data.get("userID")
+    shown = data.get("shown_schemes", [])
+
+    user = mongo.db.users.find_one({"_id": userID})
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    state = user["state"]
+
+    latest_crop = list(mongo.db.crops.find({"userID": userID}).sort("date", -1).limit(1))
+    if not latest_crop:
+        return jsonify({"error": "No crop entries"}), 404
+
+    crop = latest_crop[0]["text"]
+
+    scheme_dict = get_next_best_scheme(crop, state, shown)
+
+    if scheme_dict is None:
+        return jsonify({"error": "No scheme available"}), 404
+
+    return jsonify({
+        "crop": crop,
+        "state": state,
+        "recommended_scheme": scheme_dict
+    }), 200
+
+
+# ============================================================
+# SIMPLE SELLERS API (ONLY FROM FILE O)
+# ============================================================
+@app.get("/api/sellers")
+def get_sellers():
+    state = request.args.get("state")
+    if not state:
+        return jsonify({"error": "State required"}), 400
+
+    sellers = list(
+        mongo.db.users.find(
+            {"role": "seller", "state": state},
+            {"_id": 0, "password": 0}
+        )
+    )
+    return jsonify({"sellers": sellers}), 200
 
 
 @app.get("/")
