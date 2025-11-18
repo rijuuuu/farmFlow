@@ -13,6 +13,12 @@
   overflow: hidden;
 }
 
+.dashboard-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 /* ============================
    GRID LAYOUT
 ============================ */
@@ -52,7 +58,6 @@
   height: 130px;
 }
 
-/* FIX: Remove default margin from h1 inside .name-location to remove top space */
 .name-location h1 {
   margin-top: 0;
 }
@@ -134,12 +139,11 @@
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  max-height: 150px; 
-  overflow-y: auto; 
+  max-height: 150px;
+  overflow-y: auto;
   padding-right: 4px;
 }
 
-/* Scrollbar styling */
 .farm-list::-webkit-scrollbar {
   width: 5px;
 }
@@ -153,7 +157,7 @@
   background: transparent;
 }
 
-/* FARM ITEM - FULL WIDTH */
+/* FARM ITEM */
 .farm-item {
   width: 100%;
   padding: 0.7rem;
@@ -168,16 +172,162 @@
   font-weight: 700;
 }
 
+/* ===============================
+   WEATHER CARD EXTRA STYLES
+================================= */
+.weather-grid {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.weather-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.weather-icon-large {
+  width: 70px;
+  height: 70px;
+}
+
+.weather-cond-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: -8px;
+  text-align: center;
+}
+
+.weather-right {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.alert-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #d9534f;
+  margin-bottom: 4px;
+}
+
+.alert-desc {
+  font-size: 0.75rem;
+  color: #444;
+}
+
+.no-alerts {
+  font-size: 0.85rem;
+  color: #444;
+}
+
+/* ===============================
+   CURRENT WEATHER (USER CARD)
+================================= */
+.current-weather {
+  margin-top: 0.5rem;
+}
+
+.cw-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cw-icon {
+  width: 45px;
+  height: 45px;
+}
+
+.cw-temp {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.cw-extra {
+  font-size: 0.8rem;
+  margin-top: -3px;
+  color: #444;
+}
+
+/* ===============================
+   PROGRESS BAR FOR CROPS
+================================= */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 4px;
+  background: #e6e6d8;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #7c9f52;
+  transition: width 0.4s ease-out;
+  border-radius: 4px;
+}
+
+/* ===============================
+   GOVT SCHEME LIST
+================================= */
+.scheme-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.scheme-item {
+  background: rgba(255, 255, 255, 0.45);
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #dfdfcf;
+}
+
+.scheme-item h4 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.scheme-dept {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* ===============================
+   FORECAST FIX
+================================= */
+.forecast {
+  display: flex;
+  flex-direction: column;
+}
+
+.forecast > .recharts-responsive-container {
+  flex: 1;
+  min-height: 300px;
+}
+
 /* ============================
    RESPONSIVE BREAKPOINTS
 ============================ */
-/* -------------------------------------
-   1200px Breakpoint (Tablet / Small Laptop)
---------------------------------------*/
 @media (max-width: 1200px) {
   .grid-container {
     grid-template-columns: repeat(2, 1fr);
-    width: 100%; /* FULL WIDTH FIX */
+    width: 100%;
   }
 
   .name-location,
@@ -196,34 +346,29 @@
   }
 }
 
-/* -------------------------------------
-   768px Breakpoint (Mobile)
---------------------------------------*/
 @media (max-width: 768px) {
   .grid-container {
-    grid-template-columns: 1fr;         /* Fix: Single column layout */
+    grid-template-columns: 1fr;
     gap: 1.2rem;
     padding: 1rem;
-    width: 100% !important;            /* Fix: FULL WIDTH */
+    width: 100% !important;
   }
 
   .grid-container > .dashcard {
-    grid-column: 1 / -1 !important;    /* Force full width */
-    width: 100% !important;            /* FIX: ensure no shrinking */
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
   }
 
-  /* Make farm list area scrollable */
   .farm-list {
-    max-height: 300px !important;       /* FIX: height 300px */
-    overflow-y: auto !important;        /* Scroll enabled */
+    max-height: 300px !important;
+    overflow-y: auto !important;
     padding-right: 4px;
   }
 
-  /* Govt schemes list height fix */
   .schemes .farm-list,
   .schemes-list {
-    max-height: 300px !important;       /* FIX: height 300px */
-    overflow-y: auto !important;        /* Scrollable */
+    max-height: 300px !important;
+    overflow-y: auto !important;
   }
 
   .farm-input-row {
@@ -236,27 +381,20 @@
     max-width: 100%;
   }
 
-  .farm-btn {
-    text-align: center;
-  }
-
   .dashboard {
     padding-bottom: 2rem;
   }
 }
 
-/* -------------------------------------
-   480px Breakpoint (Small Mobile)
---------------------------------------*/
 @media (max-width: 480px) {
   .grid-container {
     padding: 0.75rem;
-    width: 100% !important;            /* 100% width */
+    width: 100% !important;
   }
 
   .dashcard {
     padding: 0.85rem;
-    width: 100% !important;            /* Ensure full width */
+    width: 100% !important;
   }
 
   .loc-row {
@@ -264,4 +402,9 @@
     align-items: flex-start;
     gap: 0.2rem;
   }
+}
+
+/* === FINAL FIX: Prevent collapse caused by chatbot === */
+.dashboard {
+  min-width: 900px;
 }
